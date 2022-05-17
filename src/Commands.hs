@@ -17,12 +17,14 @@ data Command =
       , cmdTo :: Entity
       , cmdFrom :: Entity 
       }
+  | ShowAccountsCommand
   | ExitCommand
   deriving Show
 
 parseCommand :: String -> Maybe Command
 parseCommand cmdStr
   | isExitCommand cmdStr = Just ExitCommand
+  | isShowAccountsCommand cmdStr = Just ShowAccountsCommand
   | isTaxCommand cmdStr = Just $ TaxCommand 
       { cmdAmount = Dollar $ getPart read 2
       , cmdFrom = getPart Person 1 
@@ -37,9 +39,9 @@ parseCommand cmdStr
       , cmdFrom = getPart Business 0
     }
   | isTransferCommand cmdStr = Just $ TransferCommand 
-    { cmdAmount = Dollar $ getPart read 3
-    , cmdTo= getPart Person 2
-    , cmdFrom = getPart Business 0
+    { cmdAmount = Dollar $ getPart read 1
+    , cmdTo= getPart Person 5
+    , cmdFrom = getPart Person 3
   }
   | otherwise = Nothing
   where
@@ -94,6 +96,10 @@ handleCommand cmd =
 -- exit
 isExitCommand :: String -> Bool
 isExitCommand cmd = cmd == "exit"
+
+-- show
+isShowAccountsCommand :: String -> Bool
+isShowAccountsCommand cmd = cmd == "show accounts"
 
 -- <business> pays <person> <amount>
 isPaymentCommand :: String -> Bool
