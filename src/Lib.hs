@@ -4,6 +4,7 @@ module Lib
 
 import Commands
 import Accounts (Account, processTransactions)
+import Control.DeepSeq
  
 -- consider forever https://hackage.haskell.org/package/base-4.16.1.0/docs/Control-Monad.html#v:forever
 
@@ -23,4 +24,4 @@ repl accounts = do
       let transacations = handleCommand cmd
       print transacations 
       let updatedAccounts = processTransactions accounts transacations
-      repl updatedAccounts
+      updatedAccounts `deepseq` repl updatedAccounts

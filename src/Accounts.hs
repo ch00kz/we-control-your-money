@@ -1,15 +1,21 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+
 module Accounts where
 
 import Data.Maybe (fromJust)
 import Data.List (findIndex, find)
 import Text.CSV
 import Transaction (Transaction(..), Entity(..), Dollar(..))
+import Control.DeepSeq
+import GHC.Generics (Generic)
 
 data Account = 
-  Account { accountOwner :: Entity
-          , accountBalance :: Dollar
+  Account { accountOwner :: !Entity
+          , accountBalance :: !Dollar
           }
+  deriving (Generic, NFData)
+
 instance Show Account where
   show account = owner ++ " | " ++ balance ++ "\n"
     where
