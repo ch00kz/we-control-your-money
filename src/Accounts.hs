@@ -1,4 +1,7 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards  #-}
+{-# LANGUAGE Strict #-}
+{-# LANGUAGE BangPatterns #-}
+
 module Accounts where
 
 import Data.Maybe (fromJust)
@@ -7,8 +10,8 @@ import Text.CSV
 import Transaction (Transaction(..), Entity(..), Dollar(..))
 
 data Account = 
-  Account { accountOwner :: Entity
-          , accountBalance :: Dollar
+  Account { accountOwner :: !Entity
+          , accountBalance :: !Dollar
           }
 instance Show Account where
   show account = owner ++ " | " ++ balance ++ "\n"
@@ -48,7 +51,7 @@ debitAccount debitAmount account =
           }
 
 updateAccount :: AccountFunction -> Entity -> Dollar -> [Account] -> [Account]
-updateAccount f owner amount accounts = 
+updateAccount !f !owner !amount !accounts = 
   (take i accounts) ++ [updatedAccount] ++ (drop (i + 1) accounts)
     where
       isAccountOwner o a = accountOwner a == o
@@ -81,11 +84,11 @@ toAccount (name, balance, kind) = Account {..}
     accountBalance = Dollar balanceFromCsv
 
 processTransactions :: [Account] -> [Transaction] -> [Account]
-processTransactions accounts [] = accounts
-processTransactions accounts (t:ts) = processTransactions (processTransaction accounts t) ts
+processTransactions !accounts [] = accounts
+processTransactions !accounts !(t:ts) = processTransactions (processTransaction accounts t) ts
 
 processTransaction :: [Account] -> Transaction -> [Account]
-processTransaction accounts t = (creditToAccount . debitFromAccount) accounts
+processTransaction !accounts !t = (creditToAccount . debitFromAccount) accounts
   where
     fromEntity = txnFrom t
     toEntity = txnTo t
