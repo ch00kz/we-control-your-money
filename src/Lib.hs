@@ -22,5 +22,5 @@ repl accounts = do
     Just cmd -> do
       let transacations = handleCommand cmd
       print transacations 
-      let updatedAccounts = processTransactions accounts transacations
+      updatedAccounts <- processTransactions accounts transacations
       repl updatedAccounts
