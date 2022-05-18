@@ -1,4 +1,10 @@
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+
 module Transaction where
+
+import Control.DeepSeq
+import GHC.Generics (Generic)
+
 
 {-what the CSV will look like
   andrew,500,individual
@@ -7,10 +13,10 @@ module Transaction where
 -}
 
 data Entity = 
-    Government 
-  | Person String 
-  | Business String 
-  deriving (Eq)
+    Government
+  | Person String
+  | Business String
+  deriving (Eq, Generic, NFData)
 
 instance Show Entity where
   show (Person name) = name ++ " (Person)"
@@ -19,6 +25,7 @@ instance Show Entity where
 
 -- Dollar 
 newtype Dollar = Dollar {unDollar :: Double}
+  deriving (Eq, Generic, NFData)
 
 instance Show Dollar where
   show (Dollar amt) = "$" ++ show amt
