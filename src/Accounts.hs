@@ -47,15 +47,16 @@ debitAccount debitAmount account =
           , accountBalance = accountBalance account - debitAmount 
           }
 
-updateAccount :: AccountFunction -> Entity -> Dollar -> [Account] -> [Account]
-updateAccount f owner amount accounts = 
-  (take i accounts) ++ [updatedAccount] ++ (drop (i + 1) accounts)
-    where
-      isAccountOwner o a = accountOwner a == o
-      account = fromJust $ find (isAccountOwner owner) accounts -- fromJust will explode with a Nothing
-      isAccount = (==) account
-      i = fromJust $ findIndex isAccount accounts -- fromJust will explode with a Nothing
-      updatedAccount = f amount account
+updateAccount :: AccountFunction -> Entity -> Dollar -> [Account] -> IO([Account])
+updateAccount f owner amount accounts = do
+  let isAccountOwner o a = accountOwner a == o
+  account <- pure $ fromJust $ find (isAccountOwner owner) accounts
+  let 
+    isAccount = (==) account
+    updatedAccount = f amount account
+  
+  i <- pure $ fromJust $ findIndex isAccount accounts -- fromJust will explode with a Nothing
+  pure $ (take i accounts) ++ [updatedAccount] ++ (drop (i + 1) accounts)
 
 getAccounts :: IO (Maybe [Account])
 getAccounts = do
@@ -80,12 +81,15 @@ toAccount (name, balance, kind) = Account {..}
       _ -> Person name -- Maybe is probably the right thing but this is "good enough"
     accountBalance = Dollar balanceFromCsv
 
-processTransactions :: [Account] -> [Transaction] -> [Account]
-processTransactions accounts [] = accounts
-processTransactions accounts (t:ts) = processTransactions (processTransaction accounts t) ts
+-- possible: make function calls strict so evaluation happens right away
+processTransactions :: [Account] -> [Transaction] -> IO [Account]
+processTransactions accounts [] = pure accounts
+processTransactions accounts (t:ts) = do
+  accounts' <- processTransaction accounts t
+  processTransactions accounts' ts
 
-processTransaction :: [Account] -> Transaction -> [Account]
-processTransaction accounts t = (creditToAccount . debitFromAccount) accounts
+processTransaction :: [Account] -> Transaction -> IO [Account]
+processTransaction accounts t = debitFromAccount accounts >>= creditToAccount 
   where
     fromEntity = txnFrom t
     toEntity = txnTo t
